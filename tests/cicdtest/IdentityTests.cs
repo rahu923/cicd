@@ -12,6 +12,24 @@ namespace cicdtest;
 
 public class IdentityTests
 {
+    [Fact]
+    public async Task SeederSupportsThreeConfiguredUsers()
+    {
+        await using var provider = CreateServices();
+        await using var scope = provider.CreateAsyncScope();
+        var options = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<IdentitySeedOptions>>();
+        options.Value.Users.Add(new SeedUserOptions
+        {
+            Email = "manager@example.com", Role = AppRoles.Manager, Password = $"Aa1!{Guid.NewGuid():N}"
+        });
+        await scope.ServiceProvider.GetRequiredService<IdentitySeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<IdentitySeeder>().SeedAsync();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var manager = (await users.FindByEmailAsync("manager@example.com"))!;
+        Assert.True(await users.IsInRoleAsync(manager, AppRoles.Manager));
+        Assert.Equal(3, await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users.CountAsync());
+    }
+
     private static ServiceProvider CreateServices(bool enableSeed = true, string? password = null)
     {
         var services = new ServiceCollection();

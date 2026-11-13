@@ -30,9 +30,9 @@ public class IdentitySeeder(
         var settings = options.Value;
         if (settings.Enabled)
         {
-            if (settings.Users.Count != 2 || settings.Users.Select(x => x.Email)
-                .Distinct(StringComparer.OrdinalIgnoreCase).Count() != 2)
-                throw new InvalidOperationException("IdentitySeed must define two different users.");
+            if (settings.Users.Count == 0 || settings.Users.Select(x => x.Email)
+                .Distinct(StringComparer.OrdinalIgnoreCase).Count() != settings.Users.Count)
+                throw new InvalidOperationException("IdentitySeed must define at least one user with unique email addresses.");
 
             foreach (var user in settings.Users)
             {
