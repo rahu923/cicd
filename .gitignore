@@ -1,0 +1,10 @@
+﻿namespace cicd
+{
+    public class _
+    {
+    }
+}
+.vs/
+**/.vs/
+bin/
+obj/
