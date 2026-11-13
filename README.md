@@ -32,8 +32,8 @@ and a trusted ASP.NET Core HTTPS development certificate.
 dotnet restore cicd.sln
 dotnet dev-certs https --trust
 dotnet user-secrets set "IdentitySeed:Enabled" "true"
-dotnet user-secrets set "IdentitySeed:Users:0:Password" "<choose-a-unique-admin-password>"
-dotnet user-secrets set "IdentitySeed:Users:1:Password" "<choose-a-unique-customer-password>"
+dotnet user-secrets set "IdentitySeed:Users:0:Password" "Rahul_123"
+dotnet user-secrets set "IdentitySeed:Users:1:Password" "Rahul_123"
 dotnet run --launch-profile https -- --initialize-database
 dotnet run --launch-profile https
 ```
