@@ -51,8 +51,16 @@ stages:
         publishWebProjects: false
         projects: 'cicd.csproj'
         arguments: '--configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/webapp'
-        zipAfterPublish: true
+        zipAfterPublish: false
         modifyOutputPath: false
+    - task: ArchiveFiles@2
+      displayName: 'Create webapp.zip'
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/webapp'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/webapp.zip'
+        replaceExistingArchive: true
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)/webapp.zip'
