@@ -102,12 +102,13 @@ stages:
                 $url = "https://$($hostname.Trim())/health/ready"
                 for ($attempt = 1; $attempt -le 12; $attempt++) {
                   try {
-                    $response = Invoke-WebRequest -Uri $url -TimeoutSec 30
+                    $response = Invoke-WebRequest -Uri $url -TimeoutSec 30 -SkipHttpErrorCheck
                     if ($response.StatusCode -eq 200) { Write-Host 'Staging check passed.'; exit 0 }
-                  } catch { Write-Host "Staging is not ready (attempt $attempt)." }
+                    Write-Host "Staging returned HTTP $([int]$response.StatusCode) (attempt $attempt)."
+                  } catch { Write-Host "Staging request failed before a response was received (attempt $attempt). Check slot availability, DNS, TLS, and network access." }
                   Start-Sleep -Seconds 10
                 }
-                throw 'Staging did not return HTTP 200; production promotion stopped.'
+                throw 'Staging readiness failed; production promotion stopped. Check staging Log stream, ConnectionStrings__DefaultConnection, SQL access, and database initialization. See README.md.'
 
 - stage: Production
   displayName: 'Promote staging to production'
