@@ -1,0 +1,11 @@
+@using cicd.Security
+@{ ViewData["Title"] = "My profile"; }
+<h1>My profile</h1>
+<p>Signed in as <strong>@User.Identity?.Name</strong>.</p>
+<h2>Permissions</h2>
+<ul>
+@foreach (var permission in User.FindAll(Permissions.ClaimType).Select(x => x.Value).Distinct().Order())
+{
+    <li>@permission</li>
+}
+</ul>

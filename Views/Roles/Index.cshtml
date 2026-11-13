@@ -1,0 +1,12 @@
+@model IReadOnlyList<cicd.Repositories.RoleSummary>
+@{ ViewData["Title"] = "Roles and permissions"; }
+<h1>Roles and permissions</h1>
+<table class="table">
+    <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+    <tbody>
+    @foreach (var role in Model)
+    {
+        <tr><td>@role.Name</td><td>@string.Join(", ", role.Permissions)</td></tr>
+    }
+    </tbody>
+</table>

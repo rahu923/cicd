@@ -99,7 +99,7 @@ stages:
               inlineScript: |
                 $hostname = az webapp show --resource-group "$(resourceGroupName)" --name "$(webAppName)" --slot "$(stagingSlot)" --query defaultHostName --output tsv
                 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($hostname)) { throw 'Cannot resolve staging hostname.' }
-                $url = "https://$($hostname.Trim())/"
+                $url = "https://$($hostname.Trim())/health/ready"
                 for ($attempt = 1; $attempt -le 12; $attempt++) {
                   try {
                     $response = Invoke-WebRequest -Uri $url -TimeoutSec 30
