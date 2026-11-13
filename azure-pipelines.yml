@@ -1,11 +1,11 @@
 # Temporarily disable push-triggered runs; manual runs remain available.
 #trigger: none
 # Restore this configuration to enable automatic runs on master:
- trigger:
-   batch: true
-   branches:
-     include:
-     - master
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
 
 pool:
   vmImage: 'windows-latest'
