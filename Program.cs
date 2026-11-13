@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 var initializeDatabase = args.Contains("--initialize-database", StringComparer.Ordinal);
 var builder = WebApplication.CreateBuilder(args.Where(x => x != "--initialize-database").ToArray());
+builder.Logging.AddAzureWebAppDiagnostics();
 builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
