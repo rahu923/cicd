@@ -1,10 +1,17 @@
-﻿namespace cicd
-{
-    public class _
-    {
-    }
-}
+﻿# Visual Studio
 .vs/
 **/.vs/
+
+# Build output
 bin/
 obj/
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+
+# Logs
+*.log
