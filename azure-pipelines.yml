@@ -10,7 +10,8 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
+  # Build the web project directly; the solution also references a sibling test project outside this repository.
+  solution: 'cicd.csproj'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
