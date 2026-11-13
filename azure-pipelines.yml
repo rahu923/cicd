@@ -1,30 +1,125 @@
-# ASP.NET
-# Build and test ASP.NET projects.
-# Add steps that publish symbols, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
-
+# CI runs are batched so a newer push cannot overwrite staging during a release.
 trigger:
-- master
+  batch: true
+  branches:
+    include:
+    - master
 
 pool:
   vmImage: 'windows-latest'
 
 variables:
-  # Build the web project directly; the solution also references a sibling test project outside this repository.
-  solution: 'cicd.csproj'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  azureServiceConnection: 'azure-cicd-connection'
+  webAppName: 'cicdwebapp'
+  resourceGroupName: 'cicdrg'  
+  webAppType: 'webApp' # Use webAppLinux for a Linux App Service.
+  stagingSlot: 'staging'
 
-steps:
-- task: NuGetToolInstaller@1
+stages:
+- stage: BuildTest
+  displayName: 'Build and test'
+  jobs:
+  - job: Build
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '10.0.x'
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore solution'
+      inputs:
+        command: 'restore'
+        projects: 'cicd.sln'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build solution'
+      inputs:
+        command: 'build'
+        projects: 'cicd.sln'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+    - task: DotNetCoreCLI@2
+      displayName: 'Run unit tests'
+      inputs:
+        command: 'test'
+        projects: 'tests/cicdtest/cicdtest.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-build'
+        publishTestResults: true
+    - task: DotNetCoreCLI@2
+      displayName: 'Package web app'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: 'cicd.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/webapp'
+        zipAfterPublish: true
+        modifyOutputPath: false
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/webapp.zip'
+        artifact: 'drop'
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+- stage: Staging
+  displayName: 'Deploy to staging slot'
+  dependsOn: BuildTest
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - deployment: DeployStaging
+    environment: 'cicd-staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+          - task: AzureWebApp@1
+            displayName: 'Deploy package to staging'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              appType: '$(webAppType)'
+              appName: '$(webAppName)'
+              deployToSlotOrASE: true
+              resourceGroupName: '$(resourceGroupName)'
+              slotName: '$(stagingSlot)'
+              package: '$(Pipeline.Workspace)/drop/webapp.zip'
+              deploymentMethod: 'zipDeploy'
+          - task: AzureCLI@2
+            displayName: 'Check staging responds successfully'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                $hostname = az webapp show --resource-group "$(resourceGroupName)" --name "$(webAppName)" --slot "$(stagingSlot)" --query defaultHostName --output tsv
+                if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($hostname)) { throw 'Cannot resolve staging hostname.' }
+                $url = "https://$($hostname.Trim())/"
+                for ($attempt = 1; $attempt -le 12; $attempt++) {
+                  try {
+                    $response = Invoke-WebRequest -Uri $url -TimeoutSec 30
+                    if ($response.StatusCode -eq 200) { Write-Host 'Staging check passed.'; exit 0 }
+                  } catch { Write-Host "Staging is not ready (attempt $attempt)." }
+                  Start-Sleep -Seconds 10
+                }
+                throw 'Staging did not return HTTP 200; production promotion stopped.'
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+- stage: Production
+  displayName: 'Promote staging to production'
+  dependsOn: Staging
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - deployment: PromoteProduction
+    # Optional approval: configure Approvals and checks on this environment in Azure DevOps.
+    environment: 'cicd-production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: none
+          - task: AzureAppServiceManage@0
+            displayName: 'Swap staging into production'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              Action: 'Swap Slots'
+              WebAppName: '$(webAppName)'
+              ResourceGroupName: '$(resourceGroupName)'
+              SourceSlot: '$(stagingSlot)'
+              SwapWithProduction: true

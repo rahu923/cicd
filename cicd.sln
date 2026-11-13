@@ -5,7 +5,7 @@ VisualStudioVersion = 17.14.36414.22 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cicd", "cicd.csproj", "{FAE51264-2BF6-40BC-A1A0-80E216E4F440}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cicdtest", "..\cicdtest\cicdtest.csproj", "{651F269B-B808-429F-BB2D-97FE83F6259E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cicdtest", "tests\cicdtest\cicdtest.csproj", "{651F269B-B808-429F-BB2D-97FE83F6259E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
