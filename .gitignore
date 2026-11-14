@@ -15,3 +15,7 @@ obj/
 
 # Logs
 *.log
+
+# Azure Functions local secrets and emulator data
+**/local.settings.json
+**/.azurite/

@@ -3,6 +3,10 @@
 ASP.NET Core 10 MVC with SQL Server/Azure SQL, Entity Framework Core migrations,
 ASP.NET Core Identity, and permission policies.
 
+The solution also includes three Azure Functions practice examples (HTTP, queue,
+and timer). See [the Functions practice guide](functions/README.md) for local
+setup, sample requests, exercises, and pipeline packaging.
+
 ## Roles and permissions
 
 | Role | Permission claims |

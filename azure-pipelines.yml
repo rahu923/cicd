@@ -68,6 +68,37 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)/webapp.zip'
         artifact: 'drop'
 
+- stage: FunctionsPackage
+  displayName: 'Package practice Azure Functions'
+  dependsOn: BuildTest
+  jobs:
+  - job: PackageFunctions
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '10.0.x'
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish practice Functions'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: 'functions/Cicd.Functions/Cicd.Functions.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/functions'
+        zipAfterPublish: false
+        modifyOutputPath: false
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/functions'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/functions.zip'
+        replaceExistingArchive: true
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/functions.zip'
+        artifact: 'functions'
+
 - stage: Staging
   displayName: 'Deploy to staging slot'
   dependsOn: BuildTest

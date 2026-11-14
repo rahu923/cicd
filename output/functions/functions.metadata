@@ -1,0 +1,76 @@
+[
+  {
+    "name": "SubmitPracticeJob",
+    "scriptFile": "Cicd.Functions.dll",
+    "entryPoint": "Cicd.Functions.PracticeFunctions.SubmitPracticeJob",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "request",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Function",
+        "methods": [
+          "post"
+        ],
+        "route": "practice/jobs",
+        "properties": {}
+      },
+      {
+        "name": "Response",
+        "type": "http",
+        "direction": "Out"
+      },
+      {
+        "name": "Message",
+        "direction": "Out",
+        "type": "queue",
+        "dataType": "String",
+        "queueName": "practice-jobs",
+        "connection": "AzureWebJobsStorage",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "ProcessPracticeJob",
+    "scriptFile": "Cicd.Functions.dll",
+    "entryPoint": "Cicd.Functions.PracticeFunctions.ProcessPracticeJob",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "message",
+        "direction": "In",
+        "type": "queueTrigger",
+        "dataType": "String",
+        "queueName": "practice-jobs",
+        "connection": "AzureWebJobsStorage",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "PracticeHeartbeat",
+    "scriptFile": "Cicd.Functions.dll",
+    "entryPoint": "Cicd.Functions.PracticeFunctions.PracticeHeartbeat",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "timer",
+        "direction": "In",
+        "type": "timerTrigger",
+        "schedule": "%PracticeHeartbeatSchedule%",
+        "properties": {}
+      }
+    ]
+  }
+]
